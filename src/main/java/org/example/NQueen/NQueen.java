@@ -1,4 +1,4 @@
-package org.example;
+package org.example.NQueen;
 
 import lombok.Data;
 
@@ -14,12 +14,14 @@ public class NQueen implements Comparable<NQueen> {
 
     private int fitness;
 
+    private int id;
+
     @Override
     public int compareTo(NQueen other) {
         int dif = other.fitness - this.fitness;
         if (dif != 0) {
             return dif;
         }
-        return other.getCode().compareTo(this.getCode());
+        return other.id - this.id;
     }
 }

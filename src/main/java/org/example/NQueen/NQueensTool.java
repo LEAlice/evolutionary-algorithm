@@ -1,4 +1,4 @@
-package org.example;
+package org.example.NQueen;
 
 import java.util.*;
 
@@ -7,7 +7,45 @@ import java.util.*;
  */
 public class NQueensTool {
 
+    private int count;
+
+    /**
+     *
+     * @param n n皇后问题
+     * @param size 种群大小
+     * @param iterations 迭代次数
+     * @param rate 变异率
+     * @return 经过进化后得到的最佳个体
+     */
+    public NQueen evolution(int n, int size, int iterations, double rate) {
+        TreeSet<NQueen> population = this.init(n, size);
+        int bestFitness = 0;
+        if (population.first() != null) {
+            bestFitness = population.first().getFitness();
+        }
+        int maxFitness = this.maxFitness(n);
+
+        for (int i = 0; !(i >= iterations || bestFitness >= maxFitness); i++) {
+            List<NQueen> list = this.selectParents(population, 5);
+            List<NQueen> parents = this.selectTwoParents(list);
+            List<NQueen> child = this.crossover(parents.get(0), parents.get(1));
+            List<NQueen> mutatedChild = new ArrayList<>();
+            for (NQueen nQueen : child) {
+                mutatedChild.add(this.mutation(nQueen, rate));
+            }
+            // 更新种群
+            population.addAll(mutatedChild);
+            // 淘汰适应度最低的两个个体
+            population.pollLast();
+            population.pollLast();
+            bestFitness = population.first().getFitness();
+            System.out.println("echo " + (i + 1) + ", bestFitness = " + bestFitness);
+        }
+        return population.first();
+    }
+
     public TreeSet<NQueen> init(int n, int size) {
+        count = 0;
         List<Integer> source = new ArrayList<>();
         for (int i = 0; i < n; i++) {
             source.add(i);
@@ -19,6 +57,7 @@ public class NQueensTool {
             nQueen.setGene(gene);
             nQueen.setCode(toString(gene));
             nQueen.setFitness(calculateFitness(gene));
+            nQueen.setId(count++);
             population.add(nQueen);
         }
         return population;
@@ -54,15 +93,9 @@ public class NQueensTool {
     public int calculateConflict(int[] gene){
         int n = gene.length;
         int conflictNum = 0;
-        for (int row = 0; row < n; row++) {
-            int col = gene[row];
-            for (int i = row + 1, j = col + 1; i < n && j <= n; i++, j++) {
-                if (gene[i] == j) {
-                    conflictNum++;
-                }
-            }
-            for (int i = row - 1, j = col - 1; i > 0 && j >= 0; i--, j--) {
-                if (gene[i] == j) {
+        for (int i = 0; i < n; i++) {
+            for (int j = i + 1; j < n; j++) {
+                if (Math.abs(gene[i] - gene[j]) == Math.abs(i - j)) {
                     conflictNum++;
                 }
             }
@@ -104,7 +137,7 @@ public class NQueensTool {
     }
 
     /**
-     * 变异操作
+     * 变异操作，具体实现为生成一个随机数，若在变异几率内，则随机交换基因上两个位置的值
      *
      * @param nQueen 个体
      * @param rate 变异几率
@@ -117,8 +150,8 @@ public class NQueensTool {
         if (r <= rate) {
             int mutationPos = randomPos(length);
             int temp = gene[mutationPos];
-            gene[mutationPos] = gene[length - mutationPos];
-            gene[length - mutationPos] = temp;
+            gene[mutationPos] = gene[length - mutationPos - 1];
+            gene[length - mutationPos - 1] = temp;
         }
         return geneToNQueen(gene);
     }
@@ -141,7 +174,7 @@ public class NQueensTool {
         if (pos < 1) {
             pos = 1;
         }
-        System.out.println("pos = " + pos);
+//        System.out.println("pos = " + pos);
         for (int i = 0; i < pos; i++) {
             child1.add(gene2[i]);
             child2.add(gene1[i]);
@@ -177,6 +210,7 @@ public class NQueensTool {
         nQueen.setGene(gene);
         nQueen.setCode(toString(gene));
         nQueen.setFitness(calculateFitness(gene));
+        nQueen.setId(count++);
         return nQueen;
     }
 }
